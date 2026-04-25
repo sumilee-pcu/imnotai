@@ -111,6 +111,15 @@ textarea:focus{border-color:var(--accent);}
 
 <div class="container">
 
+  <!-- 항상 보이는 액션 바 -->
+  <div class="toolbar" style="margin-bottom:12px;">
+    <button class="btn primary" id="btnAnalyze">🔍 분석</button>
+    <button class="btn fix" id="btnFix">✏️ 자동수정</button>
+    <button class="btn" id="btnSample">샘플</button>
+    <button class="btn" id="btnClear">지우기</button>
+    <span class="char-cnt" id="charCnt">0자</span>
+  </div>
+
   <!-- 탭 -->
   <div class="tabs">
     <div class="tab active" id="tabBtnInput">✍️ 입력</div>
@@ -123,13 +132,6 @@ textarea:focus{border-color:var(--accent);}
     <textarea id="inputText" placeholder="AI가 생성한 한국어 텍스트를 붙여넣으세요.
 
 예: '결론적으로 시사하는 바가 크다', '~를 통해', '되어진다' 등의 패턴을 자동으로 탐지합니다."></textarea>
-    <div class="toolbar">
-      <button class="btn primary" id="btnAnalyze">🔍 분석</button>
-      <button class="btn fix" id="btnFix">✏️ 자동수정</button>
-      <button class="btn" id="btnSample">샘플</button>
-      <button class="btn" id="btnClear">지우기</button>
-      <span class="char-cnt" id="charCnt">0자</span>
-    </div>
   </div>
 
   <!-- 결과 탭 -->
@@ -172,8 +174,10 @@ textarea:focus{border-color:var(--accent);}
 
   <!-- 수정본 탭 -->
   <div id="panelFixed" class="hidden">
-    <div id="fixedText" class="fixed-view"></div>
-    <div class="toolbar">
+    <div id="fixedText" class="fixed-view">
+      <span style="color:var(--dim)">✏️ 자동수정 버튼을 누르면 수정 결과가 여기에 표시됩니다.</span>
+    </div>
+    <div class="toolbar" style="margin-top:10px;">
       <button class="btn primary" id="btnCopyFixed">📋 복사</button>
     </div>
   </div>
