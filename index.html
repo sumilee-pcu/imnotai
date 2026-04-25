@@ -99,9 +99,118 @@ textarea:focus{border-color:var(--accent);}
 
 /* 숨김 */
 .hidden{display:none!important;}
+
+/* ── 인트로 화면 ── */
+#introScreen{
+  position:fixed;inset:0;background:var(--bg);z-index:999;
+  overflow-y:auto;padding:0 0 40px;
+}
+.intro-hero{
+  background:linear-gradient(135deg,#0d0d1a 0%,#1a1030 50%,#0d1520 100%);
+  padding:48px 24px 40px;text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.intro-logo{font-size:2.6rem;font-weight:900;letter-spacing:-.04em;margin-bottom:8px;}
+.intro-logo span{color:var(--accent2);}
+.intro-tagline{font-size:1rem;color:var(--dim);margin-bottom:20px;line-height:1.6;}
+.intro-tagline strong{color:var(--text);}
+.intro-quote{
+  display:inline-block;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:12px 18px;font-size:13px;color:var(--dim);
+  line-height:1.7;text-align:left;max-width:320px;margin-bottom:28px;
+}
+.intro-quote em{color:var(--warn);font-style:normal;font-weight:600;}
+.intro-start-btn{
+  display:block;width:calc(100% - 48px);max-width:320px;margin:0 auto;
+  padding:16px;background:var(--accent);color:#fff;border:none;border-radius:12px;
+  font-size:1.05rem;font-weight:700;cursor:pointer;letter-spacing:-.01em;
+  transition:all .15s;
+}
+.intro-start-btn:active{transform:scale(.97);background:var(--accent2);}
+.intro-section{padding:28px 20px 0;}
+.intro-section h2{font-size:14px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;}
+/* 카테고리 배지 그리드 */
+.cat-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.cat-chip{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;
+  border:1px solid transparent;
+}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+/* 사용법 스텝 */
+.steps{display:flex;flex-direction:column;gap:12px;}
+.step{
+  display:flex;align-items:flex-start;gap:14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;
+}
+.step-num{
+  width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;
+  font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.step-body h3{font-size:14px;font-weight:700;margin-bottom:3px;}
+.step-body p{font-size:13px;color:var(--dim);line-height:1.5;}
+/* 다시 보지 않기 */
+.intro-skip{text-align:center;padding-top:20px;}
+.intro-skip label{font-size:13px;color:var(--dim);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;}
+.intro-skip input{accent-color:var(--accent);width:16px;height:16px;}
 </style>
 </head>
 <body>
+
+<!-- ══ 인트로 화면 ══ -->
+<div id="introScreen">
+  <div class="intro-hero">
+    <div class="intro-logo">i<span>am</span>notai</div>
+    <p class="intro-tagline">
+      <strong>AI가 쓴 한국어</strong>, 자연스럽게 되돌리기<br>
+      번역투·AI 특유 표현을 찾아내 문체만 바꿉니다
+    </p>
+    <div class="intro-quote">
+      <em>"~를 통해"</em>, <em>"결론적으로 시사하는 바가 크다"</em>, <em>"되어진다"</em>…<br>
+      GPT 초안이 맞는 말인데 왠지 읽기 싫은 그 느낌.<br>
+      대부분 <strong style="color:var(--text)">영어 번역투</strong>입니다.
+    </div>
+    <button class="intro-start-btn" id="btnStartApp">지금 시작하기 →</button>
+  </div>
+
+  <div class="intro-section">
+    <h2>탐지하는 12가지 패턴</h2>
+    <div class="cat-grid" id="introCatGrid"></div>
+  </div>
+
+  <div class="intro-section">
+    <h2>이렇게 사용하세요</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>텍스트 붙여넣기</h3>
+          <p>AI가 생성한 한국어 글을 입력 탭에 붙여넣으세요. ChatGPT, Claude, Gemini 모두 OK.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>🔍 분석 버튼 클릭</h3>
+          <p>번역투·클리셰·피동 남용 등 패턴을 색상별로 하이라이트하고 AI 티 점수(0~100)를 계산합니다.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>✏️ 자동수정 또는 직접 수정</h3>
+          <p>자동수정으로 규칙 기반 변환을 하거나, 하이라이트된 부분을 보고 직접 고치세요. 내용은 한 글자도 안 바뀝니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="intro-section">
+    <div class="intro-skip">
+      <label><input type="checkbox" id="chkSkipIntro"> 다음부터 이 화면 건너뛰기</label>
+    </div>
+  </div>
+</div>
 
 <header>
   <h1>i<span>am</span>notai</h1>
@@ -136,7 +245,14 @@ textarea:focus{border-color:var(--accent);}
 
   <!-- 결과 탭 -->
   <div id="panelResult" class="hidden">
-    <!-- 점수 -->
+    <!-- 분석 전 안내 -->
+    <div id="resultEmpty" class="empty" style="padding:60px 20px;">
+      <div class="ico">🔍</div>
+      <p style="font-size:15px;font-weight:600;margin-bottom:8px;">아직 분석 전이에요</p>
+      <p style="font-size:13px;color:var(--dim);">입력 탭에서 텍스트를 붙여넣고<br><strong style="color:var(--accent)">🔍 분석</strong> 버튼을 눌러주세요</p>
+    </div>
+    <!-- 점수 (분석 후) -->
+    <div id="resultContent" class="hidden">
     <div class="score-card">
       <div class="score-ring">
         <svg width="72" height="72" viewBox="0 0 72 72">
@@ -170,15 +286,21 @@ textarea:focus{border-color:var(--accent);}
     <div class="match-list" id="matchList">
       <div class="empty"><div class="ico">✅</div>감지된 패턴이 없습니다</div>
     </div>
+    </div><!-- /resultContent -->
   </div>
 
   <!-- 수정본 탭 -->
   <div id="panelFixed" class="hidden">
-    <div id="fixedText" class="fixed-view">
-      <span style="color:var(--dim)">✏️ 자동수정 버튼을 누르면 수정 결과가 여기에 표시됩니다.</span>
+    <div id="fixedEmpty" class="empty" style="padding:60px 20px;">
+      <div class="ico">✏️</div>
+      <p style="font-size:15px;font-weight:600;margin-bottom:8px;">수정 결과가 여기에 표시돼요</p>
+      <p style="font-size:13px;color:var(--dim);">입력 탭에서 텍스트를 붙여넣고<br><strong style="color:var(--ok)">✏️ 자동수정</strong> 버튼을 눌러주세요</p>
     </div>
-    <div class="toolbar" style="margin-top:10px;">
-      <button class="btn primary" id="btnCopyFixed">📋 복사</button>
+    <div id="fixedContent" class="hidden">
+      <div id="fixedText" class="fixed-view"></div>
+      <div class="toolbar" style="margin-top:10px;">
+        <button class="btn primary" id="btnCopyFixed">📋 복사</button>
+      </div>
     </div>
   </div>
 
@@ -357,6 +479,35 @@ function renderDiff(orig,fixed){
   return h;
 }
 
+// ── 인트로 ────────────────────────────────────────
+const CATS_INFO=[
+  {id:"A",name:"번역투",color:"#e74c3c"},{id:"B",name:"피동 남용",color:"#e67e22"},
+  {id:"C",name:"관용구·클리셰",color:"#f39c12"},{id:"D",name:"기계적 병렬",color:"#27ae60"},
+  {id:"E",name:"접속사 남발",color:"#2980b9"},{id:"F",name:"리듬 균일",color:"#8e44ad"},
+  {id:"G",name:"이모지 남용",color:"#16a085"},{id:"H",name:"영어 혼용",color:"#c0392b"},
+  {id:"I",name:"과도한 단정",color:"#95a5a6"},{id:"J",name:"격식체 과잉",color:"#1abc9c"},
+  {id:"K",name:"빈 부사",color:"#d35400"},{id:"L",name:"AI 구조 신호",color:"#5b6eae"},
+];
+// 카테고리 배지 렌더
+document.getElementById("introCatGrid").innerHTML=CATS_INFO.map(c=>`
+  <div class="cat-chip" style="background:${c.color}18;border-color:${c.color}44;">
+    <div class="cat-dot" style="background:${c.color}"></div>
+    <span style="color:${c.color}">${c.name}</span>
+  </div>`).join("");
+
+// 인트로 표시 여부
+const introEl=document.getElementById("introScreen");
+if(localStorage.getItem("iamnotai_skip_intro")==="1"){
+  introEl.classList.add("hidden");
+}
+document.getElementById("btnStartApp").addEventListener("click",()=>{
+  if(document.getElementById("chkSkipIntro").checked){
+    localStorage.setItem("iamnotai_skip_intro","1");
+  }
+  introEl.classList.add("hidden");
+  showTab("Input");
+});
+
 // ── UI 상태 ───────────────────────────────────────
 let currentFixed="";
 
@@ -404,6 +555,10 @@ document.getElementById("btnAnalyze").addEventListener("click",function(){
   document.getElementById("stCats").textContent=new Set(matches.map(m=>m.catId)).size;
   document.getElementById("stChars").textContent=text.length+"자";
 
+  // 결과 영역 표시
+  document.getElementById("resultEmpty").classList.add("hidden");
+  document.getElementById("resultContent").classList.remove("hidden");
+
   // 하이라이트
   document.getElementById("highlightText").innerHTML=renderHL(text,matches);
 
@@ -440,6 +595,8 @@ document.getElementById("btnFix").addEventListener("click",function(){
   if(!text){alert("텍스트를 입력해주세요.");return;}
   const{text:fixed,cnt}=autoFix(text);
   currentFixed=fixed;
+  document.getElementById("fixedEmpty").classList.add("hidden");
+  document.getElementById("fixedContent").classList.remove("hidden");
   document.getElementById("fixedText").innerHTML=
     renderDiff(text,fixed)+
     `\n\n<span style="color:var(--dim);font-size:12px">— ${cnt}개 규칙 적용됨</span>`;
