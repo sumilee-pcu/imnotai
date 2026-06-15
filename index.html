@@ -382,14 +382,16 @@ textarea:focus{border-color:var(--accent);}
   <div class="modal">
     <h3>🔑 API 키 설정</h3>
     <p class="desc">키는 이 브라우저(localStorage)에만 저장되며 서버로 전송되지 않습니다. 아직 발급 전이면 비워두고 닫아도 됩니다.</p>
-    <label>Upstage API 키 (Solar)</label>
+    <label>Upstage API 키 (Solar) — 본인 키로 호출되어 본인 계정에 과금됩니다</label>
     <input id="inUpstageKey" type="password" placeholder="up_..." autocomplete="off">
     <label>Upstage 모델 ID</label>
     <input id="inUpstageModel" type="text" placeholder="solar-open2-preview">
-    <label>Google Gemini API 키</label>
-    <input id="inGeminiKey" type="password" placeholder="AIza..." autocomplete="off">
-    <label>Gemini 모델 ID</label>
-    <input id="inGeminiModel" type="text" placeholder="gemini-2.5-flash">
+    <div id="geminiKeyFields">
+      <label>Google Gemini API 키</label>
+      <input id="inGeminiKey" type="password" placeholder="AIza..." autocomplete="off">
+      <label>Gemini 모델 ID</label>
+      <input id="inGeminiModel" type="text" placeholder="gemini-2.5-flash">
+    </div>
     <div class="modal-actions">
       <button class="btn primary" id="btnSaveKeys" style="flex:1">저장</button>
       <button class="btn" id="btnCloseKeys" style="flex:1">닫기</button>
@@ -737,9 +739,10 @@ document.addEventListener("keydown",e=>{
 // ══════════════════════════════════════════════
 //  ✨ LLM 윤문 (Solar / Opus / Sonnet)
 // ══════════════════════════════════════════════
+// byok=true: 사용자가 본인 키 입력(과금=사용자) / false: 서버 키로 프록시 처리(과금=운영자)
 const PROVIDERS={
-  solar:{label:"Solar-Open2-Preview",type:"openai",endpoint:"https://api.upstage.ai/v1/chat/completions",keyName:"upstage",modelDefault:"solar-open2-preview"},
-  gemini:{label:"Gemini",type:"gemini",keyName:"gemini",modelDefault:"gemini-2.5-flash"},
+  solar:{label:"Solar-Open2-Preview",type:"openai",endpoint:"https://api.upstage.ai/v1/chat/completions",keyName:"upstage",modelDefault:"solar-open2-preview",byok:true},
+  gemini:{label:"Gemini",type:"gemini",keyName:"gemini",modelDefault:"gemini-2.5-flash",byok:false},
 };
 const LS={upstageKey:"iamnotai_upstage_key",upstageModel:"iamnotai_upstage_model",geminiKey:"iamnotai_gemini_key",geminiModel:"iamnotai_gemini_model"};
 
@@ -754,19 +757,41 @@ async function detectBackend(){
     const j=await r.json();
     if(!j||!j.proxy) return;
     PROXY=true; PROXY_AVAIL=j.providers||{};
-    // 키 입력 UI 숨김 → 서버 연결 표시
-    document.getElementById("keyDot").classList.add("ok");
-    document.getElementById("keyLabel").textContent="🛡️ 서버 연결됨";
-    document.getElementById("keyStatus").style.cursor="default";
-    // 서버에 키 없는 모델은 비활성화
+    // 서버에 키 없는(available=false) 모델은 비활성화
     const sel=document.getElementById("llmModel");
     [...sel.options].forEach(o=>{
-      if(PROXY_AVAIL[o.value]===false){o.disabled=true;o.textContent+=" (서버 키 없음)";}
+      const info=PROXY_AVAIL[o.value];
+      if(info && info.available===false){o.disabled=true;o.textContent+=" (서버 키 없음)";}
     });
     if(sel.selectedOptions[0]&&sel.selectedOptions[0].disabled){
       const ok=[...sel.options].find(o=>!o.disabled); if(ok) sel.value=ok.value;
     }
   }catch(e){/* 로컬·GitHub Pages 등 프록시 없음 → BYO-키 모드 유지 */}
+}
+
+// 선택된 모델에 맞춰 키 상태/모달 필드를 갱신
+// - 프록시 + 서버처리(byok=false): "🛡️ 서버 처리", 입력 불필요
+// - 그 외(BYO 모드 전체 또는 프록시+byok): 사용자 키 필요 → 점등은 키 보유 여부
+let keyStatusMode="byok";
+function updateKeyUI(){
+  const cfg=PROVIDERS[document.getElementById("llmModel").value];
+  const dot=document.getElementById("keyDot"), label=document.getElementById("keyLabel");
+  if(PROXY && !cfg.byok){
+    keyStatusMode="server";
+    label.textContent="🛡️ 서버 처리";
+    dot.classList.add("ok");
+    document.getElementById("keyStatus").style.cursor="default";
+  }else{
+    keyStatusMode="byok";
+    label.textContent="🔑 내 키 입력";
+    document.getElementById("keyStatus").style.cursor="pointer";
+    const lsKey=cfg.keyName==="upstage"?LS.upstageKey:LS.geminiKey;
+    dot.classList.toggle("ok",!!localStorage.getItem(lsKey));
+  }
+}
+// 프록시 모드에서는 서버가 처리하는 Gemini 키 입력란을 모달에서 숨긴다
+function updateModalFields(){
+  document.getElementById("geminiKeyFields").style.display=PROXY?"none":"";
 }
 
 // 빠른모드 = 고빈도·고영향 카테고리만 (A 번역투, B 피동, C 클리셰, E 접속사, K 빈부사)
@@ -799,19 +824,12 @@ document.querySelectorAll("#llmModeSeg button").forEach(b=>{
 });
 updateModeNote();
 
-// 키 상태 표시 (BYO-키 모드 전용; 프록시 모드에서는 항상 초록 유지)
-function refreshKeyDot(){
-  if(PROXY) return;
-  const need=PROVIDERS[document.getElementById("llmModel").value].keyName;
-  const has=(need==="upstage"?localStorage.getItem(LS.upstageKey):localStorage.getItem(LS.geminiKey));
-  document.getElementById("keyDot").classList.toggle("ok",!!has);
-}
-document.getElementById("llmModel").addEventListener("change",refreshKeyDot);
+document.getElementById("llmModel").addEventListener("change",updateKeyUI);
 
 // 키 모달
 const keyModal=document.getElementById("keyModal");
 document.getElementById("keyStatus").addEventListener("click",()=>{
-  if(PROXY){alert("이 사이트는 서버 프록시로 동작합니다. API 키는 서버에 안전하게 보관되며 따로 입력할 필요가 없습니다.");return;}
+  if(keyStatusMode==="server"){alert("이 모델은 서버 키로 처리되어 별도 입력이 필요 없습니다. (Solar 등 본인 키가 필요한 모델을 선택하면 입력란이 나타납니다)");return;}
   document.getElementById("inUpstageKey").value=localStorage.getItem(LS.upstageKey)||"";
   document.getElementById("inUpstageModel").value=localStorage.getItem(LS.upstageModel)||PROVIDERS.solar.modelDefault;
   document.getElementById("inGeminiKey").value=localStorage.getItem(LS.geminiKey)||"";
@@ -829,7 +847,7 @@ document.getElementById("btnSaveKeys").addEventListener("click",()=>{
   um?localStorage.setItem(LS.upstageModel,um):localStorage.removeItem(LS.upstageModel);
   gk?localStorage.setItem(LS.geminiKey,gk):localStorage.removeItem(LS.geminiKey);
   gm?localStorage.setItem(LS.geminiModel,gm):localStorage.removeItem(LS.geminiModel);
-  keyModal.classList.add("hidden"); refreshKeyDot();
+  keyModal.classList.add("hidden"); updateKeyUI();
 });
 
 // 프롬프트 (의미보존 100 강제 + 자가보고 JSON)
@@ -855,10 +873,19 @@ function extractJSON(s){
 }
 
 async function callLLM(provKey,text,fast){
-  // 프록시 모드: 서버가 키 보관·프롬프트 조립·LLM 호출을 대신함
+  // 프록시 모드: 서버가 프롬프트 조립·LLM 호출을 대신함
+  //  - byok 모델(Solar)은 사용자 키를 함께 보내 사용자 계정으로 과금(서버 저장 안 함)
+  //  - 그 외(Gemini)는 서버 키로 처리
   if(PROXY){
-    const r=await fetch(PROXY_PATH,{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({provider:provKey,text,fast})});
+    const cfg=PROVIDERS[provKey];
+    const payload={provider:provKey,text,fast};
+    if(cfg.byok){
+      const uk=localStorage.getItem(cfg.keyName==="upstage"?LS.upstageKey:LS.geminiKey);
+      if(!uk) throw new Error(cfg.label+"는 본인 API 키가 필요합니다. ‘🔑 내 키 입력’에서 입력하세요.");
+      payload.userKey=uk;
+      if(cfg.keyName==="upstage") payload.userModel=localStorage.getItem(LS.upstageModel)||cfg.modelDefault;
+    }
+    const r=await fetch(PROXY_PATH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     let j=null; try{j=await r.json();}catch(_){}
     if(!r.ok) throw new Error((j&&j.error||("프록시 오류 "+r.status))+(j&&j.detail?": "+j.detail:""));
     return j;
@@ -959,7 +986,7 @@ document.getElementById("btnCopyLlm").addEventListener("click",function(){
 
 document.getElementById("btnLlm").addEventListener("click",()=>showTab("Llm"));
 document.getElementById("tabBtnLlm").onclick=()=>showTab("Llm");
-detectBackend().finally(refreshKeyDot);
+detectBackend().finally(()=>{updateModalFields();updateKeyUI();});
 </script>
 </body>
 </html>

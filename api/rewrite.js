@@ -51,9 +51,11 @@ ${guide}
 {"rewritten":"윤문된 전체 글","de_ai_score":정수 0~100(낮을수록 AI티 없음),"meaning_preservation":정수 0~100(높을수록 원문 의미 보존),"change_rate":정수 0~100(원문 대비 바뀐 분량 %),"notes":"핵심 수정 요약 1~2문장"}`;
 }
 
+// byok(bring-your-own-key) = true 면 사용자가 보낸 키(body.userKey)를 쓰고(과금=사용자),
+// false 면 서버 env 키를 쓴다(과금=운영자).
 const PROVIDERS = {
-  solar: { type: "openai", endpoint: "https://api.upstage.ai/v1/chat/completions", keyEnv: "UPSTAGE_API_KEY" },
-  gemini: { type: "gemini", keyEnv: "GEMINI_API_KEY" },
+  solar: { type: "openai", endpoint: "https://api.upstage.ai/v1/chat/completions", byok: true },
+  gemini: { type: "gemini", keyEnv: "GEMINI_API_KEY", byok: false },
 };
 
 function extractJSON(s) {
@@ -96,14 +98,20 @@ module.exports = async (req, res) => {
     if (!text || !String(text).trim()) return res.status(400).json({ error: "text 가 비어 있습니다." });
     if (String(text).length > 8000) return res.status(413).json({ error: "8000자 이내로 입력하세요." });
 
-    const key = process.env[p.keyEnv];
-    if (!key) return res.status(500).json({ error: `${p.keyEnv} 가 설정되지 않았습니다.` });
+    let key;
+    if (p.byok) {
+      key = body.userKey;
+      if (!key || !String(key).trim()) return res.status(400).json({ error: "이 모델은 본인 API 키가 필요합니다. (userKey 누락)" });
+    } else {
+      key = process.env[p.keyEnv];
+      if (!key) return res.status(500).json({ error: `${p.keyEnv} 가 설정되지 않았습니다.` });
+    }
 
     const system = buildSystem(!!fast);
     let content = "";
 
     if (p.type === "openai") {
-      const model = process.env.UPSTAGE_MODEL || "solar-open2-preview";
+      const model = (p.byok ? body.userModel : process.env.UPSTAGE_MODEL) || "solar-open2-preview";
       const r = await fetch(p.endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },

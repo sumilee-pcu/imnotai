@@ -10,9 +10,10 @@ module.exports = async (req, res) => {
   return res.status(200).json({
     ok: true,
     proxy: true,
+    // available: 모델 사용 가능 여부 / byok: 사용자가 본인 키를 입력해야 하는지
     providers: {
-      solar: !!process.env.UPSTAGE_API_KEY,
-      gemini: !!process.env.GEMINI_API_KEY,
+      gemini: { available: !!process.env.GEMINI_API_KEY, byok: false },
+      solar: { available: true, byok: true },
     },
   });
 };
