@@ -339,8 +339,7 @@ textarea:focus{border-color:var(--accent);}
     <div class="llm-controls">
       <select id="llmModel">
         <option value="solar">Solar-Open2-Preview (Upstage)</option>
-        <option value="opus">Claude Opus 4.8</option>
-        <option value="sonnet">Claude Sonnet 4.6</option>
+        <option value="gemini">Gemini (Google)</option>
       </select>
       <div class="seg" id="llmModeSeg">
         <button type="button" data-mode="fast" class="on">빠른모드</button>
@@ -387,8 +386,10 @@ textarea:focus{border-color:var(--accent);}
     <input id="inUpstageKey" type="password" placeholder="up_..." autocomplete="off">
     <label>Upstage 모델 ID</label>
     <input id="inUpstageModel" type="text" placeholder="solar-open2-preview">
-    <label>Anthropic API 키 (Opus / Sonnet)</label>
-    <input id="inAnthropicKey" type="password" placeholder="sk-ant-..." autocomplete="off">
+    <label>Google Gemini API 키</label>
+    <input id="inGeminiKey" type="password" placeholder="AIza..." autocomplete="off">
+    <label>Gemini 모델 ID</label>
+    <input id="inGeminiModel" type="text" placeholder="gemini-2.5-flash">
     <div class="modal-actions">
       <button class="btn primary" id="btnSaveKeys" style="flex:1">저장</button>
       <button class="btn" id="btnCloseKeys" style="flex:1">닫기</button>
@@ -738,10 +739,9 @@ document.addEventListener("keydown",e=>{
 // ══════════════════════════════════════════════
 const PROVIDERS={
   solar:{label:"Solar-Open2-Preview",type:"openai",endpoint:"https://api.upstage.ai/v1/chat/completions",keyName:"upstage",modelDefault:"solar-open2-preview"},
-  opus:{label:"Claude Opus 4.8",type:"anthropic",endpoint:"https://api.anthropic.com/v1/messages",keyName:"anthropic",model:"claude-opus-4-8"},
-  sonnet:{label:"Claude Sonnet 4.6",type:"anthropic",endpoint:"https://api.anthropic.com/v1/messages",keyName:"anthropic",model:"claude-sonnet-4-6"},
+  gemini:{label:"Gemini",type:"gemini",keyName:"gemini",modelDefault:"gemini-2.5-flash"},
 };
-const LS={upstageKey:"iamnotai_upstage_key",upstageModel:"iamnotai_upstage_model",anthropicKey:"iamnotai_anthropic_key"};
+const LS={upstageKey:"iamnotai_upstage_key",upstageModel:"iamnotai_upstage_model",geminiKey:"iamnotai_gemini_key",geminiModel:"iamnotai_gemini_model"};
 
 // 배포 환경 자동 감지: 프록시(api/health)가 응답하면 서버 프록시 모드, 아니면 BYO-키 직접호출 모드
 let PROXY=false;            // api/rewrite 프록시 사용 여부
@@ -803,7 +803,7 @@ updateModeNote();
 function refreshKeyDot(){
   if(PROXY) return;
   const need=PROVIDERS[document.getElementById("llmModel").value].keyName;
-  const has=(need==="upstage"?localStorage.getItem(LS.upstageKey):localStorage.getItem(LS.anthropicKey));
+  const has=(need==="upstage"?localStorage.getItem(LS.upstageKey):localStorage.getItem(LS.geminiKey));
   document.getElementById("keyDot").classList.toggle("ok",!!has);
 }
 document.getElementById("llmModel").addEventListener("change",refreshKeyDot);
@@ -814,7 +814,8 @@ document.getElementById("keyStatus").addEventListener("click",()=>{
   if(PROXY){alert("이 사이트는 서버 프록시로 동작합니다. API 키는 서버에 안전하게 보관되며 따로 입력할 필요가 없습니다.");return;}
   document.getElementById("inUpstageKey").value=localStorage.getItem(LS.upstageKey)||"";
   document.getElementById("inUpstageModel").value=localStorage.getItem(LS.upstageModel)||PROVIDERS.solar.modelDefault;
-  document.getElementById("inAnthropicKey").value=localStorage.getItem(LS.anthropicKey)||"";
+  document.getElementById("inGeminiKey").value=localStorage.getItem(LS.geminiKey)||"";
+  document.getElementById("inGeminiModel").value=localStorage.getItem(LS.geminiModel)||PROVIDERS.gemini.modelDefault;
   keyModal.classList.remove("hidden");
 });
 document.getElementById("btnCloseKeys").addEventListener("click",()=>keyModal.classList.add("hidden"));
@@ -822,10 +823,12 @@ keyModal.addEventListener("click",e=>{if(e.target===keyModal)keyModal.classList.
 document.getElementById("btnSaveKeys").addEventListener("click",()=>{
   const uk=document.getElementById("inUpstageKey").value.trim();
   const um=document.getElementById("inUpstageModel").value.trim();
-  const ak=document.getElementById("inAnthropicKey").value.trim();
+  const gk=document.getElementById("inGeminiKey").value.trim();
+  const gm=document.getElementById("inGeminiModel").value.trim();
   uk?localStorage.setItem(LS.upstageKey,uk):localStorage.removeItem(LS.upstageKey);
   um?localStorage.setItem(LS.upstageModel,um):localStorage.removeItem(LS.upstageModel);
-  ak?localStorage.setItem(LS.anthropicKey,ak):localStorage.removeItem(LS.anthropicKey);
+  gk?localStorage.setItem(LS.geminiKey,gk):localStorage.removeItem(LS.geminiKey);
+  gm?localStorage.setItem(LS.geminiModel,gm):localStorage.removeItem(LS.geminiModel);
   keyModal.classList.add("hidden"); refreshKeyDot();
 });
 
@@ -872,13 +875,14 @@ async function callLLM(provKey,text,fast){
     const j=await r.json();
     return extractJSON(j.choices?.[0]?.message?.content||"");
   } else {
-    const key=localStorage.getItem(LS.anthropicKey);
-    if(!key) throw new Error("Anthropic API 키가 없습니다. ‘🔑 키 설정’에서 입력하세요.");
-    const r=await fetch(p.endpoint,{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-      body:JSON.stringify({model:p.model,max_tokens:4096,system:sys,messages:[{role:"user",content:user}]})});
-    if(!r.ok) throw new Error("Anthropic API "+r.status+": "+(await r.text()).slice(0,200));
+    const key=localStorage.getItem(LS.geminiKey);
+    if(!key) throw new Error("Gemini API 키가 없습니다. ‘🔑 키 설정’에서 입력하세요.");
+    const model=localStorage.getItem(LS.geminiModel)||p.modelDefault;
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
+      body:JSON.stringify({system_instruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:user}]}],generationConfig:{temperature:0.7,responseMimeType:"application/json"}})});
+    if(!r.ok) throw new Error("Gemini API "+r.status+": "+(await r.text()).slice(0,200));
     const j=await r.json();
-    return extractJSON(j.content?.[0]?.text||"");
+    return extractJSON(j.candidates?.[0]?.content?.parts?.[0]?.text||"");
   }
 }
 

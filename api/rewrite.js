@@ -53,8 +53,7 @@ ${guide}
 
 const PROVIDERS = {
   solar: { type: "openai", endpoint: "https://api.upstage.ai/v1/chat/completions", keyEnv: "UPSTAGE_API_KEY" },
-  opus: { type: "anthropic", endpoint: "https://api.anthropic.com/v1/messages", model: "claude-opus-4-8", keyEnv: "ANTHROPIC_API_KEY" },
-  sonnet: { type: "anthropic", endpoint: "https://api.anthropic.com/v1/messages", model: "claude-sonnet-4-6", keyEnv: "ANTHROPIC_API_KEY" },
+  gemini: { type: "gemini", keyEnv: "GEMINI_API_KEY" },
 };
 
 function extractJSON(s) {
@@ -114,14 +113,22 @@ module.exports = async (req, res) => {
       const j = await r.json();
       content = j.choices && j.choices[0] && j.choices[0].message ? j.choices[0].message.content : "";
     } else {
-      const r = await fetch(p.endpoint, {
+      // Gemini (Google Generative Language API). 키는 헤더로 전달(URL 노출 금지).
+      const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      const r = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: p.model, max_tokens: 4096, system, messages: [{ role: "user", content: text }] }),
+        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: system }] },
+          contents: [{ role: "user", parts: [{ text }] }],
+          generationConfig: { temperature: 0.7, responseMimeType: "application/json" },
+        }),
       });
-      if (!r.ok) return res.status(502).json({ error: "Anthropic API " + r.status, detail: (await r.text()).slice(0, 300) });
+      if (!r.ok) return res.status(502).json({ error: "Gemini API " + r.status, detail: (await r.text()).slice(0, 300) });
       const j = await r.json();
-      content = j.content && j.content[0] ? j.content[0].text : "";
+      const cand = j.candidates && j.candidates[0];
+      content = cand && cand.content && cand.content.parts && cand.content.parts[0] ? cand.content.parts[0].text : "";
     }
 
     const data = extractJSON(content);

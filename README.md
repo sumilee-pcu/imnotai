@@ -3,7 +3,7 @@
 > AI가 생성한 한국어 텍스트에서 번역투·AI 특유 패턴을 탐지하고 수정합니다.
 > [epoko77-ai/im-not-ai](https://github.com/epoko77-ai/im-not-ai) 원본 분류 체계 기반, 향상된 기능 추가
 >
-> **v3.0** — 규칙 기반 탐지/수정에 더해 **LLM 윤문**(Solar / Opus / Sonnet)을 웹앱에 추가했습니다.
+> **v3.0** — 규칙 기반 탐지/수정에 더해 **LLM 윤문**(Solar / Gemini)을 웹앱에 추가했습니다.
 
 ---
 
@@ -38,7 +38,7 @@ iamnotai/
 
 | 항목 | 설명 |
 |------|------|
-| **모델 선택** | Solar-Open2-Preview(Upstage) · Claude Opus 4.8 · Claude Sonnet 4.6 |
+| **모델 선택** | Solar-Open2-Preview(Upstage) · Gemini(Google) |
 | **빠른모드** | 고빈도·고영향 5개 카테고리(`A`번역투·`B`피동·`C`클리셰·`E`접속사·`K`빈부사)만 프롬프트에 주입 |
 | **전체모드** | 12개 전체 카테고리 패턴을 모두 반영 |
 | **3대 지표** | **de-AI 점수**(낮을수록 좋음) · **의미보존**(높을수록 좋음) · **변경률**(자가보고 + 로컬 실측 교차검증) |
@@ -46,7 +46,7 @@ iamnotai/
 - 지표는 윤문 호출이 JSON으로 **자가보고**하며, 변경률은 브라우저에서 문자 편집거리로 **실측값**을 함께 표시합니다.
 - 빠른모드 카테고리 정의는 `patterns.json`의 `fast_mode_categories`와 공유됩니다.
 - **API 키**: `🔑 키 설정`에서 입력하며 브라우저 `localStorage`에만 저장됩니다(서버 전송 없음).
-  - Upstage 키는 OpenAI 호환 엔드포인트, Anthropic 키는 `anthropic-dangerous-direct-browser-access`로 직접 호출합니다.
+  - Upstage 키는 OpenAI 호환 엔드포인트, Gemini 키는 `x-goog-api-key` 헤더로 직접 호출합니다.
   - ⚠️ 공개 서비스 시에는 키 노출 방지를 위해 **백엔드 프록시**로 전환 권장(현재는 BYO-키 클라이언트 방식).
 
 ---
@@ -67,7 +67,7 @@ api/health.js    ← 프록시 감지용 헬스체크
 **배포 절차**
 1. 이 레포를 Vercel에 임포트(프레임워크 프리셋 = Other, 빌드 설정 불필요).
 2. **Settings → Environment Variables** 에 `.env.example` 항목 등록:
-   - `ANTHROPIC_API_KEY` (Opus/Sonnet), `UPSTAGE_API_KEY`·`UPSTAGE_MODEL` (Solar)
+   - `GEMINI_API_KEY`·`GEMINI_MODEL` (Gemini), `UPSTAGE_API_KEY`·`UPSTAGE_MODEL` (Solar)
    - 서버에 키가 없는 모델은 프런트에서 자동 비활성화됩니다.
 3. 배포 후 접속하면 자동으로 서버 모드로 동작합니다.
 

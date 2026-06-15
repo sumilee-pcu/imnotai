@@ -12,8 +12,7 @@ module.exports = async (req, res) => {
     proxy: true,
     providers: {
       solar: !!process.env.UPSTAGE_API_KEY,
-      opus: !!process.env.ANTHROPIC_API_KEY,
-      sonnet: !!process.env.ANTHROPIC_API_KEY,
+      gemini: !!process.env.GEMINI_API_KEY,
     },
   });
 };
