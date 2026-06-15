@@ -153,6 +153,34 @@ textarea:focus{border-color:var(--accent);}
 .intro-skip{text-align:center;padding-top:20px;}
 .intro-skip label{font-size:13px;color:var(--dim);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;}
 .intro-skip input{accent-color:var(--accent);width:16px;height:16px;}
+
+/* ── LLM 윤문 패널 ── */
+.llm-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;}
+.llm-controls select{padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;}
+.llm-controls select:focus{border-color:var(--accent);}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.seg button{padding:9px 14px;background:var(--surface);border:none;color:var(--dim);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.seg button.on{background:var(--accent);color:#fff;}
+.key-status{font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--dim);margin-left:auto;}
+.key-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);flex-shrink:0;}
+.key-dot.ok{background:var(--ok);}
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;}
+.metric .mval{font-size:1.6rem;font-weight:800;}
+.metric .mlbl{font-size:11px;color:var(--dim);margin-top:3px;}
+.metric .msub{font-size:10px;color:var(--dim);margin-top:2px;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #ffffff60;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.llm-note{font-size:12px;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;line-height:1.6;margin-bottom:12px;}
+/* 모달 */
+.modal-bg{position:fixed;inset:0;background:#000a;z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;max-width:420px;width:100%;}
+.modal h3{font-size:1.1rem;font-weight:800;margin-bottom:6px;}
+.modal p.desc{font-size:12px;color:var(--dim);line-height:1.6;margin-bottom:8px;}
+.modal label{display:block;font-size:12px;font-weight:700;color:var(--dim);margin:12px 0 5px;}
+.modal input{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;outline:none;}
+.modal input:focus{border-color:var(--accent);}
+.modal .modal-actions{display:flex;gap:8px;margin-top:18px;}
 </style>
 </head>
 <body>
@@ -214,8 +242,8 @@ textarea:focus{border-color:var(--accent);}
 
 <header>
   <h1>i<span>am</span>notai</h1>
-  <span class="v-badge">v2.0</span>
-  <span class="sub">12카테고리 · 55+ 패턴</span>
+  <span class="v-badge">v3.0</span>
+  <span class="sub">12카테고리 · 55+ 패턴 · ✨LLM 윤문</span>
 </header>
 
 <div class="container">
@@ -224,6 +252,7 @@ textarea:focus{border-color:var(--accent);}
   <div class="toolbar" style="margin-bottom:12px;">
     <button class="btn primary" id="btnAnalyze">🔍 분석</button>
     <button class="btn fix" id="btnFix">✏️ 자동수정</button>
+    <button class="btn" id="btnLlm" style="background:var(--accent2);color:#fff;border-color:var(--accent2)">✨ LLM 윤문</button>
     <button class="btn" id="btnSample">샘플</button>
     <button class="btn" id="btnClear">지우기</button>
     <span class="char-cnt" id="charCnt">0자</span>
@@ -234,6 +263,7 @@ textarea:focus{border-color:var(--accent);}
     <div class="tab active" id="tabBtnInput">✍️ 입력</div>
     <div class="tab" id="tabBtnResult">🔍 결과</div>
     <div class="tab" id="tabBtnFixed">✏️ 수정본</div>
+    <div class="tab" id="tabBtnLlm">✨ 윤문</div>
   </div>
 
   <!-- 입력 탭 -->
@@ -304,6 +334,66 @@ textarea:focus{border-color:var(--accent);}
     </div>
   </div>
 
+  <!-- LLM 윤문 탭 -->
+  <div id="panelLlm" class="hidden">
+    <div class="llm-controls">
+      <select id="llmModel">
+        <option value="solar">Solar-Open2-Preview (Upstage)</option>
+        <option value="opus">Claude Opus 4.8</option>
+        <option value="sonnet">Claude Sonnet 4.6</option>
+      </select>
+      <div class="seg" id="llmModeSeg">
+        <button type="button" data-mode="fast" class="on">빠른모드</button>
+        <button type="button" data-mode="full">전체모드</button>
+      </div>
+      <span class="key-status" id="keyStatus"><span class="key-dot" id="keyDot"></span><span id="keyLabel">🔑 키 설정</span></span>
+    </div>
+
+    <div class="llm-note" id="llmModeNote"></div>
+
+    <div class="toolbar" style="margin-bottom:12px;">
+      <button class="btn primary" id="btnRunLlm" style="background:var(--accent2);border-color:var(--accent2)">✨ 윤문 실행</button>
+    </div>
+
+    <div id="llmEmpty" class="empty" style="padding:60px 20px;">
+      <div class="ico">✨</div>
+      <p style="font-size:15px;font-weight:600;margin-bottom:8px;">LLM 윤문 결과가 여기 표시돼요</p>
+      <p style="font-size:13px;color:var(--dim);">입력 탭에 글을 붙여넣고 모델·모드를 고른 뒤<br><strong style="color:var(--accent2)">✨ 윤문 실행</strong>을 눌러주세요</p>
+    </div>
+
+    <div id="llmContent" class="hidden">
+      <div class="metric-grid">
+        <div class="metric"><div class="mval" id="mDeai">–</div><div class="mlbl">de-AI 점수</div><div class="msub">낮을수록 AI티 없음</div></div>
+        <div class="metric"><div class="mval" id="mMean">–</div><div class="mlbl">의미보존</div><div class="msub">높을수록 원문 유지</div></div>
+        <div class="metric"><div class="mval" id="mChange">–</div><div class="mlbl">변경률</div><div class="msub" id="mChangeSub">자가보고</div></div>
+      </div>
+      <div id="llmNotes" style="font-size:13px;color:var(--ok);margin-bottom:10px;"></div>
+      <div id="llmOut" class="fixed-view"></div>
+      <div class="toolbar" style="margin-top:10px;">
+        <button class="btn primary" id="btnCopyLlm">📋 복사</button>
+        <button class="btn" id="btnLlmDiff">🔀 변경 표시</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- API 키 모달 -->
+<div id="keyModal" class="modal-bg hidden">
+  <div class="modal">
+    <h3>🔑 API 키 설정</h3>
+    <p class="desc">키는 이 브라우저(localStorage)에만 저장되며 서버로 전송되지 않습니다. 아직 발급 전이면 비워두고 닫아도 됩니다.</p>
+    <label>Upstage API 키 (Solar)</label>
+    <input id="inUpstageKey" type="password" placeholder="up_..." autocomplete="off">
+    <label>Upstage 모델 ID</label>
+    <input id="inUpstageModel" type="text" placeholder="solar-open2-preview">
+    <label>Anthropic API 키 (Opus / Sonnet)</label>
+    <input id="inAnthropicKey" type="password" placeholder="sk-ant-..." autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn primary" id="btnSaveKeys" style="flex:1">저장</button>
+      <button class="btn" id="btnCloseKeys" style="flex:1">닫기</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -354,6 +444,10 @@ const CATS = [
   {id:"F",name:"리듬 균일",color:"#8e44ad",pats:[
     {id:"F02",name:"~습니다 3회 연속",rx:/습니다[.。][^가-힣]{0,5}[가-힣].{3,30}습니다[.。][^가-힣]{0,5}[가-힣].{3,30}습니다/g,sev:2,alt:["다양한 어미로 변화주기"]},
   ]},
+  {id:"G",name:"이모지 남용",color:"#16a085",pats:[
+    {id:"G01",name:"문장 시작 이모지",rx:/^\s*[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gmu,sev:2,alt:["이모지 없이 내용으로 승부"]},
+    {id:"G02",name:"연속 이모지 3개+",rx:/(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*){3,}/gu,sev:2,alt:["이모지 1개 이하로 절제"]},
+  ]},
   {id:"H",name:"영어 혼용",color:"#c0392b",pats:[
     {id:"H01",name:"한글 내 영어 삽입",rx:/[가-힣]\s+[A-Za-z]{4,}\s+[가-힣]/g,sev:2,alt:["한국어로 번역"]},
     {id:"H02",name:"영어 어미 한국어화",rx:/(?:하는|된|할)\s+[A-Za-z]+(?:ing|tion|ment|ness)(?:을|를|이|가)/g,sev:3,alt:["순수 한국어로"]},
@@ -388,7 +482,7 @@ function analyze(text){
   for(const cat of CATS){
     for(const p of cat.pats){
       try{
-        const rx=new RegExp(p.rx.source, p.rx.flags.includes('m')?'gm':'g');
+        const rx=new RegExp(p.rx.source, 'g'+(p.rx.flags.includes('m')?'m':'')+(p.rx.flags.includes('u')?'u':''));
         let m;
         while((m=rx.exec(text))!==null){
           res.push({id:p.id,catId:cat.id,catName:cat.name,catColor:cat.color,
@@ -512,8 +606,8 @@ document.getElementById("btnStartApp").addEventListener("click",()=>{
 let currentFixed="";
 
 function showTab(id){
-  ["panelInput","panelResult","panelFixed"].forEach(p=>document.getElementById(p).classList.add("hidden"));
-  ["tabBtnInput","tabBtnResult","tabBtnFixed"].forEach(t=>document.getElementById(t).classList.remove("active"));
+  ["panelInput","panelResult","panelFixed","panelLlm"].forEach(p=>document.getElementById(p).classList.add("hidden"));
+  ["tabBtnInput","tabBtnResult","tabBtnFixed","tabBtnLlm"].forEach(t=>document.getElementById(t).classList.remove("active"));
   document.getElementById("panel"+id).classList.remove("hidden");
   document.getElementById("tabBtn"+id).classList.add("active");
 }
@@ -638,6 +732,230 @@ document.getElementById("btnClear").addEventListener("click",function(){
 document.addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();document.getElementById("btnAnalyze").click();}
 });
+
+// ══════════════════════════════════════════════
+//  ✨ LLM 윤문 (Solar / Opus / Sonnet)
+// ══════════════════════════════════════════════
+const PROVIDERS={
+  solar:{label:"Solar-Open2-Preview",type:"openai",endpoint:"https://api.upstage.ai/v1/chat/completions",keyName:"upstage",modelDefault:"solar-open2-preview"},
+  opus:{label:"Claude Opus 4.8",type:"anthropic",endpoint:"https://api.anthropic.com/v1/messages",keyName:"anthropic",model:"claude-opus-4-8"},
+  sonnet:{label:"Claude Sonnet 4.6",type:"anthropic",endpoint:"https://api.anthropic.com/v1/messages",keyName:"anthropic",model:"claude-sonnet-4-6"},
+};
+const LS={upstageKey:"iamnotai_upstage_key",upstageModel:"iamnotai_upstage_model",anthropicKey:"iamnotai_anthropic_key"};
+
+// 배포 환경 자동 감지: 프록시(api/health)가 응답하면 서버 프록시 모드, 아니면 BYO-키 직접호출 모드
+let PROXY=false;            // api/rewrite 프록시 사용 여부
+let PROXY_AVAIL=null;       // {solar,opus,sonnet} 서버에 키가 설정된 모델
+const PROXY_PATH="api/rewrite";
+async function detectBackend(){
+  try{
+    const r=await fetch("api/health",{method:"GET"});
+    if(!r.ok) return;
+    const j=await r.json();
+    if(!j||!j.proxy) return;
+    PROXY=true; PROXY_AVAIL=j.providers||{};
+    // 키 입력 UI 숨김 → 서버 연결 표시
+    document.getElementById("keyDot").classList.add("ok");
+    document.getElementById("keyLabel").textContent="🛡️ 서버 연결됨";
+    document.getElementById("keyStatus").style.cursor="default";
+    // 서버에 키 없는 모델은 비활성화
+    const sel=document.getElementById("llmModel");
+    [...sel.options].forEach(o=>{
+      if(PROXY_AVAIL[o.value]===false){o.disabled=true;o.textContent+=" (서버 키 없음)";}
+    });
+    if(sel.selectedOptions[0]&&sel.selectedOptions[0].disabled){
+      const ok=[...sel.options].find(o=>!o.disabled); if(ok) sel.value=ok.value;
+    }
+  }catch(e){/* 로컬·GitHub Pages 등 프록시 없음 → BYO-키 모드 유지 */}
+}
+
+// 빠른모드 = 고빈도·고영향 카테고리만 (A 번역투, B 피동, C 클리셰, E 접속사, K 빈부사)
+const FAST_CATS=["A","B","C","E","K"];
+
+function buildPatternGuide(fast){
+  const cats=fast?CATS.filter(c=>FAST_CATS.includes(c.id)):CATS;
+  return cats.map(c=>{
+    const items=c.pats.map(p=>`「${p.name}」→ ${(p.alt[0]||"자연스럽게")}`).join("; ");
+    return `[${c.name}] ${items}`;
+  }).join("\n");
+}
+
+let llmMode="fast";
+let llmLastOrig="", llmLastRewrite="", llmDiffOn=false;
+
+function updateModeNote(){
+  const fast=llmMode==="fast";
+  const n=fast?FAST_CATS.length:CATS.length;
+  document.getElementById("llmModeNote").innerHTML=fast
+    ?`⚡ <strong style="color:var(--text)">빠른모드</strong> — 고빈도·고영향 ${n}개 카테고리(번역투·피동·클리셰·접속사·빈부사)만 적용해 가볍고 빠르게 윤문합니다.`
+    :`🔍 <strong style="color:var(--text)">전체모드</strong> — 12개 전체 카테고리 패턴을 모두 반영해 더 꼼꼼하게 윤문합니다(느릴 수 있음).`;
+}
+
+document.querySelectorAll("#llmModeSeg button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("#llmModeSeg button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); llmMode=b.dataset.mode; updateModeNote();
+  });
+});
+updateModeNote();
+
+// 키 상태 표시 (BYO-키 모드 전용; 프록시 모드에서는 항상 초록 유지)
+function refreshKeyDot(){
+  if(PROXY) return;
+  const need=PROVIDERS[document.getElementById("llmModel").value].keyName;
+  const has=(need==="upstage"?localStorage.getItem(LS.upstageKey):localStorage.getItem(LS.anthropicKey));
+  document.getElementById("keyDot").classList.toggle("ok",!!has);
+}
+document.getElementById("llmModel").addEventListener("change",refreshKeyDot);
+
+// 키 모달
+const keyModal=document.getElementById("keyModal");
+document.getElementById("keyStatus").addEventListener("click",()=>{
+  if(PROXY){alert("이 사이트는 서버 프록시로 동작합니다. API 키는 서버에 안전하게 보관되며 따로 입력할 필요가 없습니다.");return;}
+  document.getElementById("inUpstageKey").value=localStorage.getItem(LS.upstageKey)||"";
+  document.getElementById("inUpstageModel").value=localStorage.getItem(LS.upstageModel)||PROVIDERS.solar.modelDefault;
+  document.getElementById("inAnthropicKey").value=localStorage.getItem(LS.anthropicKey)||"";
+  keyModal.classList.remove("hidden");
+});
+document.getElementById("btnCloseKeys").addEventListener("click",()=>keyModal.classList.add("hidden"));
+keyModal.addEventListener("click",e=>{if(e.target===keyModal)keyModal.classList.add("hidden");});
+document.getElementById("btnSaveKeys").addEventListener("click",()=>{
+  const uk=document.getElementById("inUpstageKey").value.trim();
+  const um=document.getElementById("inUpstageModel").value.trim();
+  const ak=document.getElementById("inAnthropicKey").value.trim();
+  uk?localStorage.setItem(LS.upstageKey,uk):localStorage.removeItem(LS.upstageKey);
+  um?localStorage.setItem(LS.upstageModel,um):localStorage.removeItem(LS.upstageModel);
+  ak?localStorage.setItem(LS.anthropicKey,ak):localStorage.removeItem(LS.anthropicKey);
+  keyModal.classList.add("hidden"); refreshKeyDot();
+});
+
+// 프롬프트 (의미보존 100 강제 + 자가보고 JSON)
+function buildPrompt(text,fast){
+  const guide=buildPatternGuide(fast);
+  const sys=`너는 한국어 문체 교정 전문가다. 입력 글을 "AI가 쓴 티"가 나지 않는 자연스러운 한국어로 윤문한다.
+절대 규칙:
+- 의미·정보·주장·숫자·고유명사·인용을 추가/삭제/왜곡하지 않는다(의미 100% 보존).
+- 문단 수와 순서를 유지한다. 원문에 없던 마크다운/이모지/불릿을 새로 만들지 않는다.
+- 아래 AI 특유 패턴을 자연스러운 표현으로 바꾼다:
+${guide}
+출력은 아래 JSON 객체 하나만. 코드펜스(\`\`\`)나 설명 문장을 절대 붙이지 마라.
+{"rewritten":"윤문된 전체 글","de_ai_score":정수 0~100(낮을수록 AI티 없음),"meaning_preservation":정수 0~100(높을수록 원문 의미 보존),"change_rate":정수 0~100(원문 대비 바뀐 분량 %),"notes":"핵심 수정 요약 1~2문장"}`;
+  return {sys,user:text};
+}
+
+function extractJSON(s){
+  if(!s) throw new Error("빈 응답");
+  let t=s.trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
+  const a=t.indexOf("{"), b=t.lastIndexOf("}");
+  if(a>=0&&b>a) t=t.slice(a,b+1);
+  return JSON.parse(t);
+}
+
+async function callLLM(provKey,text,fast){
+  // 프록시 모드: 서버가 키 보관·프롬프트 조립·LLM 호출을 대신함
+  if(PROXY){
+    const r=await fetch(PROXY_PATH,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({provider:provKey,text,fast})});
+    let j=null; try{j=await r.json();}catch(_){}
+    if(!r.ok) throw new Error((j&&j.error||("프록시 오류 "+r.status))+(j&&j.detail?": "+j.detail:""));
+    return j;
+  }
+  const p=PROVIDERS[provKey];
+  const {sys,user}=buildPrompt(text,fast);
+  if(p.type==="openai"){
+    const key=localStorage.getItem(LS.upstageKey);
+    if(!key) throw new Error("Upstage API 키가 없습니다. ‘🔑 키 설정’에서 입력하세요.");
+    const model=localStorage.getItem(LS.upstageModel)||p.modelDefault;
+    const r=await fetch(p.endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+      body:JSON.stringify({model,messages:[{role:"system",content:sys},{role:"user",content:user}],temperature:0.7})});
+    if(!r.ok) throw new Error("Upstage API "+r.status+": "+(await r.text()).slice(0,200));
+    const j=await r.json();
+    return extractJSON(j.choices?.[0]?.message?.content||"");
+  } else {
+    const key=localStorage.getItem(LS.anthropicKey);
+    if(!key) throw new Error("Anthropic API 키가 없습니다. ‘🔑 키 설정’에서 입력하세요.");
+    const r=await fetch(p.endpoint,{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:p.model,max_tokens:4096,system:sys,messages:[{role:"user",content:user}]})});
+    if(!r.ok) throw new Error("Anthropic API "+r.status+": "+(await r.text()).slice(0,200));
+    const j=await r.json();
+    return extractJSON(j.content?.[0]?.text||"");
+  }
+}
+
+// 로컬 실측 변경률 (문자 단위 편집거리, 4000자 초과 시 생략)
+function localChangeRate(a,b){
+  if(!a||!b) return null;
+  if(a.length>4000||b.length>4000) return null;
+  const m=a.length,n=b.length;
+  let prev=new Array(n+1),cur=new Array(n+1);
+  for(let j=0;j<=n;j++)prev[j]=j;
+  for(let i=1;i<=m;i++){cur[0]=i;
+    for(let j=1;j<=n;j++)cur[j]=a[i-1]===b[j-1]?prev[j-1]:1+Math.min(prev[j-1],prev[j],cur[j-1]);
+    [prev,cur]=[cur,prev];
+  }
+  return Math.round(prev[n]/Math.max(m,n)*100);
+}
+
+function clamp100(v){v=parseInt(v,10);return isNaN(v)?null:Math.max(0,Math.min(100,v));}
+function metricColor(v,goodLow){
+  if(v==null)return "var(--text)";
+  const good=goodLow?v<=20:v>=90, bad=goodLow?v>=50:v<=70;
+  return good?"var(--ok)":bad?"var(--danger)":"var(--warn)";
+}
+
+function renderLlm(orig,data){
+  const deai=clamp100(data.de_ai_score), mean=clamp100(data.meaning_preservation), chg=clamp100(data.change_rate);
+  const md=document.getElementById("mDeai"), mm=document.getElementById("mMean"), mc=document.getElementById("mChange");
+  md.textContent=deai==null?"–":deai; md.style.color=metricColor(deai,true);
+  mm.textContent=mean==null?"–":mean; mm.style.color=metricColor(mean,false);
+  mc.textContent=chg==null?"–":chg+"%"; mc.style.color="var(--text)";
+  const local=localChangeRate(orig,data.rewritten||"");
+  document.getElementById("mChangeSub").textContent=local==null?"자가보고":`자가보고 · 실측 ${local}%`;
+  document.getElementById("llmNotes").textContent=data.notes?("✏️ "+data.notes):"";
+  llmLastOrig=orig; llmLastRewrite=data.rewritten||""; llmDiffOn=false;
+  document.getElementById("llmOut").textContent=llmLastRewrite;
+  document.getElementById("btnLlmDiff").textContent="🔀 변경 표시";
+  document.getElementById("llmEmpty").classList.add("hidden");
+  document.getElementById("llmContent").classList.remove("hidden");
+}
+
+document.getElementById("btnRunLlm").addEventListener("click",async function(){
+  const text=document.getElementById("inputText").value.trim();
+  if(!text){alert("입력 탭에 텍스트를 붙여넣어 주세요.");showTab("Input");return;}
+  const prov=document.getElementById("llmModel").value;
+  const btn=this, old=btn.innerHTML;
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>윤문 중…';
+  try{
+    const data=await callLLM(prov,text,llmMode==="fast");
+    if(!data||!data.rewritten) throw new Error("응답에 rewritten 필드가 없습니다.");
+    renderLlm(text,data); showTab("Llm");
+  }catch(e){
+    alert("윤문 실패: "+(e.message||e));
+  }finally{
+    btn.disabled=false; btn.innerHTML=old;
+  }
+});
+
+document.getElementById("btnLlmDiff").addEventListener("click",function(){
+  if(!llmLastRewrite)return;
+  llmDiffOn=!llmDiffOn;
+  const out=document.getElementById("llmOut");
+  if(llmDiffOn){out.innerHTML=renderDiff(llmLastOrig,llmLastRewrite);this.textContent="📄 결과만";}
+  else{out.textContent=llmLastRewrite;this.textContent="🔀 변경 표시";}
+});
+
+document.getElementById("btnCopyLlm").addEventListener("click",function(){
+  const t=llmLastRewrite; if(!t)return;
+  const done=()=>{this.textContent="✅ 복사됨";setTimeout(()=>this.textContent="📋 복사",1500);};
+  navigator.clipboard.writeText(t).then(done).catch(()=>{
+    const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();
+    document.execCommand("copy");document.body.removeChild(ta);done();
+  });
+});
+
+document.getElementById("btnLlm").addEventListener("click",()=>showTab("Llm"));
+document.getElementById("tabBtnLlm").onclick=()=>showTab("Llm");
+detectBackend().finally(refreshKeyDot);
 </script>
 </body>
 </html>

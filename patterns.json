@@ -1,6 +1,8 @@
 {
   "version": "2.0",
   "description": "한글 AI 티 제거기 — 패턴 데이터베이스 (12카테고리 × 55+ 패턴)",
+  "fast_mode_categories": ["A", "B", "C", "E", "K"],
+  "fast_mode_note": "빠른모드: 고빈도·고영향 카테고리(번역투·피동·클리셰·접속사·빈부사)만 적용. 웹앱 LLM 윤문/CLI 공통 기준.",
   "categories": [
     {
       "id": "A",
