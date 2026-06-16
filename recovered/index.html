@@ -237,19 +237,6 @@ textarea:focus{border-color:var(--accent);}
   border-radius:8px;color:var(--info);font-size:12px;font-family:monospace;
   word-break:break-all;margin-bottom:10px;cursor:text;}
 .modal-btns{display:flex;gap:8px;}
-
-/* ── ✨ LLM 윤문 ── */
-.llm-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;}
-.llm-controls select{padding:8px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;}
-.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-.seg button{padding:7px 13px;background:var(--surface2);border:none;color:var(--dim);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
-.seg button.on{background:var(--accent);color:#fff;}
-.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;}
-.metric{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 10px;text-align:center;}
-.metric .mval{font-size:1.5rem;font-weight:800;}
-.metric .mlbl{font-size:11px;color:var(--dim);margin-top:2px;}
-.metric .msub{font-size:10px;color:var(--dim);margin-top:1px;}
-.llm-note{font-size:12px;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 11px;line-height:1.6;margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -275,7 +262,7 @@ textarea:focus{border-color:var(--accent);}
     <div class="steps">
       <div class="step"><div class="step-num">1</div><div class="step-body"><h3>텍스트 붙여넣기</h3><p>AI가 생성한 글을 입력 탭에 붙여넣으세요</p></div></div>
       <div class="step"><div class="step-num">2</div><div class="step-body"><h3>🔍 분석 또는 🤖 AI 분석</h3><p>패턴 분석(빠름) 또는 Claude AI 심층분석(정확)</p></div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-body"><h3>✨ AI 윤문 · ✏️ 자동수정 · 📄 PDF · 🔗 공유</h3><p>Solar/Gemini로 자연스럽게 다시 쓰거나, 수정·보고서 내보내기</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><h3>✏️ 자동수정 · 📄 PDF · 🔗 공유</h3><p>수정하거나 보고서를 내보내세요</p></div></div>
     </div>
   </div>
   <div class="intro-sec intro-skip"><label><input type="checkbox" id="chkSkipIntro"> 다음부터 건너뛰기</label></div>
@@ -319,7 +306,6 @@ textarea:focus{border-color:var(--accent);}
     <button class="btn fix" id="btnFix">✏️ 자동수정</button>
     <button class="btn pdf-btn" id="btnPdf">📄 PDF</button>
     <button class="btn share-btn" id="btnShare">🔗 공유</button>
-    <button class="btn ai-btn" id="btnLlm">✨ 윤문</button>
     <button class="btn" id="btnSample">샘플</button>
     <button class="btn" id="btnClear">지우기</button>
     <span class="char-cnt" id="charCnt">0자</span>
@@ -330,7 +316,6 @@ textarea:focus{border-color:var(--accent);}
     <div class="tab active" id="tabBtnInput">✍️ 입력</div>
     <div class="tab" id="tabBtnResult">🔍 결과</div>
     <div class="tab" id="tabBtnFixed">✏️ 수정본</div>
-    <div class="tab" id="tabBtnLlm">✨ 윤문</div>
     <div class="tab" id="tabBtnHistory">📋 히스토리</div>
     <div class="tab" id="tabBtnSettings">⚙️ 설정</div>
   </div>
@@ -396,42 +381,6 @@ textarea:focus{border-color:var(--accent);}
     </div>
   </div>
 
-  <!-- ── ✨ LLM 윤문 ── -->
-  <div id="panelLlm" class="hidden">
-    <div class="llm-controls">
-      <select id="llmModel">
-        <option value="solar">Solar-Open2-Preview (Upstage · 내 키)</option>
-        <option value="gemini">Gemini (Google · 서버)</option>
-      </select>
-      <div class="seg" id="llmModeSeg">
-        <button type="button" data-mode="fast" class="on">빠른모드</button>
-        <button type="button" data-mode="full">전체모드</button>
-      </div>
-    </div>
-    <div class="llm-note" id="llmModeNote"></div>
-    <div class="toolbar" style="margin-bottom:10px;">
-      <button class="btn ai-btn" id="btnRunLlm">✨ 윤문 실행</button>
-    </div>
-    <div id="llmEmpty" class="empty">
-      <div class="ico">✨</div>
-      <p>입력 탭에 글을 넣고 모델·모드를 고른 뒤<br><strong style="color:var(--accent2)">✨ 윤문 실행</strong>을 눌러주세요</p>
-    </div>
-    <div id="llmContent" class="hidden">
-      <div class="metric-grid">
-        <div class="metric"><div class="mval" id="mDeai">–</div><div class="mlbl">de-AI 점수</div><div class="msub">낮을수록 좋음</div></div>
-        <div class="metric"><div class="mval" id="mMean">–</div><div class="mlbl">의미보존</div><div class="msub">높을수록 좋음</div></div>
-        <div class="metric"><div class="mval" id="mChange">–</div><div class="mlbl">변경률</div><div class="msub" id="mChangeSub">자가보고</div></div>
-      </div>
-      <div id="llmNotes" style="font-size:13px;color:var(--ok);margin-bottom:8px;"></div>
-      <div id="llmOut" class="fixed-view"></div>
-      <div class="toolbar" style="margin-top:8px;">
-        <button class="btn primary" id="btnCopyLlm">📋 복사</button>
-        <button class="btn" id="btnLlmDiff">🔀 변경 표시</button>
-        <button class="btn audit-btn" id="btnAuditLlm">🤖 감사 검증</button>
-      </div>
-    </div>
-  </div>
-
   <!-- ── 히스토리 ── -->
   <div id="panelHistory" class="hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -454,25 +403,6 @@ textarea:focus{border-color:var(--accent);}
         <div class="api-status" id="apiStatus"></div>
       </div>
       <button class="btn primary" id="btnSaveKey" style="width:100%;margin-top:6px;">저장</button>
-    </div>
-    <div class="setting-group">
-      <h3>✨ LLM 윤문 설정 (Solar / Gemini)</h3>
-      <div class="setting-row">
-        <label>Upstage API 키 (Solar · 본인 계정 과금)</label>
-        <input type="password" id="inUpstageKey" placeholder="up_...">
-        <div class="hint">Solar 윤문은 본인 키로 호출됩니다. 브라우저에만 저장됩니다.</div>
-      </div>
-      <div class="setting-row">
-        <label>Upstage 모델 ID</label>
-        <input type="text" id="inUpstageModel" placeholder="solar-open2-preview">
-      </div>
-      <div class="setting-row" id="geminiKeyRow">
-        <label>Gemini API 키 (서버 미배포 시에만 필요)</label>
-        <input type="password" id="inGeminiKey" placeholder="AIza...">
-        <div class="hint">서버 프록시가 있으면 Gemini는 서버 키로 처리되어 비워도 됩니다.</div>
-      </div>
-      <button class="btn primary" id="btnSaveLlmKeys" style="width:100%;margin-top:6px;">윤문 키 저장</button>
-      <div class="api-status" id="llmKeyStatus"></div>
     </div>
     <div class="setting-group">
       <h3>📊 분석 옵션</h3>
@@ -558,10 +488,6 @@ const CATS=[
   {id:"F",name:"리듬 균일",color:"#8e44ad",pats:[
     {id:"F02",name:"~습니다 3회 연속",rx:/습니다[.。][^가-힣]{0,5}[가-힣].{3,30}습니다[.。][^가-힣]{0,5}[가-힣].{3,30}습니다/g,sev:2,alt:["다양한 어미"]},
   ]},
-  {id:"G",name:"이모지 남용",color:"#16a085",pats:[
-    {id:"G01",name:"문장 시작 이모지",rx:/^\s*[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gmu,sev:2,alt:["이모지 없이 내용으로"]},
-    {id:"G02",name:"연속 이모지 3개+",rx:/(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*){3,}/gu,sev:2,alt:["이모지 1개 이하로 절제"]},
-  ]},
   {id:"H",name:"영어 혼용",color:"#c0392b",pats:[
     {id:"H01",name:"한글 내 영어",rx:/[가-힣]\s+[A-Za-z]{4,}\s+[가-힣]/g,sev:2,alt:["한국어로 번역"]},
     {id:"H02",name:"영어 어미 한국어화",rx:/(?:하는|된|할)\s+[A-Za-z]+(?:ing|tion|ment|ness)(?:을|를|이|가)/g,sev:3,alt:["순수 한국어로"]},
@@ -606,7 +532,7 @@ function analyze(text,domain='general'){
     const weight=w[cat.id]||1;
     for(const p of cat.pats){
       try{
-        const rx=new RegExp(p.rx.source,'g'+(p.rx.flags.includes('m')?'m':'')+(p.rx.flags.includes('u')?'u':''));
+        const rx=new RegExp(p.rx.source,p.rx.flags.includes('m')?'gm':'g');
         let m;
         while((m=rx.exec(text))!==null){
           res.push({id:p.id,catId:cat.id,catName:cat.name,catColor:cat.color,
@@ -700,7 +626,7 @@ function renderDiff(orig,fixed){
 let currentMatches=[],currentFixed="",currentOriginal="",currentAiResult=null;
 
 function showTab(id){
-  ["Input","Result","Fixed","Llm","History","Settings"].forEach(p=>{
+  ["Input","Result","Fixed","History","Settings"].forEach(p=>{
     document.getElementById("panel"+p).classList.add("hidden");
     document.getElementById("tabBtn"+p).classList.remove("active");
   });
@@ -715,7 +641,7 @@ function showToast(msg,duration=2000){
 }
 
 // 탭 클릭
-["Input","Result","Fixed","Llm","History","Settings"].forEach(id=>{
+["Input","Result","Fixed","History","Settings"].forEach(id=>{
   document.getElementById("tabBtn"+id).onclick=()=>{
     if(id==="History")renderHistory();
     showTab(id);
@@ -1120,176 +1046,6 @@ document.getElementById("btnStartApp").addEventListener("click",()=>{
   introEl.classList.add("hidden");
   showTab("Input");
 });
-
-// ════════════════════════════════════════════
-//  ✨ LLM 윤문 (Solar / Gemini)
-// ════════════════════════════════════════════
-// byok=true: 사용자 본인 키(과금=사용자) / false: 서버 프록시 키(과금=운영자)
-const LLM_PROVIDERS={
-  solar:{label:"Solar-Open2-Preview",keyName:"upstage",byok:true,modelDefault:"solar-open2-preview"},
-  gemini:{label:"Gemini",keyName:"gemini",byok:false,modelDefault:"gemini-2.5-flash"},
-};
-const LLS={upstageKey:"iamnotai_upstage_key",upstageModel:"iamnotai_upstage_model",geminiKey:"iamnotai_gemini_key"};
-const LLM_FAST_CATS=["A","B","C","E","K"];
-let LLM_PROXY=false, llmMode="fast", llmOrig="", llmRewrite="", llmDiffOn=false;
-
-function llmGuide(fast){
-  const cats=fast?CATS.filter(c=>LLM_FAST_CATS.includes(c.id)):CATS;
-  return cats.map(c=>`[${c.name}] `+c.pats.map(p=>`「${p.name}」→ ${(p.alt[0]||"자연스럽게")}`).join("; ")).join("\n");
-}
-function llmSystem(fast){
-  return `너는 한국어 문체 교정 전문가다. 입력 글을 "AI가 쓴 티"가 나지 않는 자연스러운 한국어로 윤문한다.
-절대 규칙:
-- 의미·정보·주장·숫자·고유명사·인용을 추가/삭제/왜곡하지 않는다(의미 100% 보존).
-- 문단 수와 순서를 유지한다. 원문에 없던 마크다운/이모지/불릿을 새로 만들지 않는다.
-- 아래 AI 특유 패턴을 자연스러운 표현으로 바꾼다:
-${llmGuide(fast)}
-출력은 아래 JSON 객체 하나만. 코드펜스나 설명 문장을 절대 붙이지 마라.
-{"rewritten":"윤문된 전체 글","de_ai_score":정수 0~100(낮을수록 AI티 없음),"meaning_preservation":정수 0~100(높을수록 보존),"change_rate":정수 0~100(바뀐 분량 %),"notes":"핵심 수정 요약 1~2문장"}`;
-}
-function llmExtractJSON(s){
-  if(!s)throw new Error("빈 응답");
-  let t=String(s).trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
-  const a=t.indexOf("{"),b=t.lastIndexOf("}");
-  if(a>=0&&b>a)t=t.slice(a,b+1);
-  return JSON.parse(t);
-}
-async function llmDetect(){
-  try{
-    const r=await fetch("api/health");
-    if(!r.ok)return;
-    const j=await r.json();
-    if(!j||!j.proxy)return;
-    LLM_PROXY=true;
-    const avail=j.providers||{};
-    const sel=document.getElementById("llmModel");
-    [...sel.options].forEach(o=>{const inf=avail[o.value];if(inf&&inf.available===false){o.disabled=true;o.textContent+=" (서버 키 없음)";}});
-    if(sel.selectedOptions[0]&&sel.selectedOptions[0].disabled){const ok=[...sel.options].find(o=>!o.disabled);if(ok)sel.value=ok.value;}
-    const gr=document.getElementById("geminiKeyRow");if(gr)gr.style.display="none"; // 서버가 Gemini 처리
-  }catch(e){/* 프록시 없음 → BYO-키 직접호출 */}
-}
-async function llmCall(prov,text,fast){
-  const cfg=LLM_PROVIDERS[prov];
-  if(LLM_PROXY){
-    const payload={provider:prov,text,fast};
-    if(cfg.byok){
-      const uk=localStorage.getItem(LLS.upstageKey);
-      if(!uk)throw new Error(cfg.label+" 키가 필요합니다. ⚙️ 설정에서 입력하세요.");
-      payload.userKey=uk;payload.userModel=localStorage.getItem(LLS.upstageModel)||cfg.modelDefault;
-    }
-    const r=await fetch("api/rewrite",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-    let j=null;try{j=await r.json();}catch(_){}
-    if(!r.ok)throw new Error((j&&j.error||("프록시 "+r.status))+(j&&j.detail?": "+j.detail:""));
-    return j;
-  }
-  const sys=llmSystem(fast);
-  if(prov==="solar"){
-    const key=localStorage.getItem(LLS.upstageKey);
-    if(!key)throw new Error("Upstage 키가 필요합니다. ⚙️ 설정에서 입력하세요.");
-    const model=localStorage.getItem(LLS.upstageModel)||cfg.modelDefault;
-    const r=await fetch("https://api.upstage.ai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model,messages:[{role:"system",content:sys},{role:"user",content:text}],temperature:0.7})});
-    if(!r.ok)throw new Error("Upstage "+r.status+": "+(await r.text()).slice(0,200));
-    const j=await r.json();return llmExtractJSON(j.choices?.[0]?.message?.content||"");
-  }else{
-    const key=localStorage.getItem(LLS.geminiKey);
-    if(!key)throw new Error("Gemini 키가 필요합니다. ⚙️ 설정에서 입력하세요.");
-    const model=cfg.modelDefault;
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({system_instruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text}]}],generationConfig:{temperature:0.7,responseMimeType:"application/json"}})});
-    if(!r.ok)throw new Error("Gemini "+r.status+": "+(await r.text()).slice(0,200));
-    const j=await r.json();return llmExtractJSON(j.candidates?.[0]?.content?.parts?.[0]?.text||"");
-  }
-}
-function llmLocalChange(a,b){
-  if(!a||!b)return null;
-  if(a.length>4000||b.length>4000)return null;
-  const m=a.length,n=b.length;let prev=new Array(n+1),cur=new Array(n+1);
-  for(let j=0;j<=n;j++)prev[j]=j;
-  for(let i=1;i<=m;i++){cur[0]=i;for(let j=1;j<=n;j++)cur[j]=a[i-1]===b[j-1]?prev[j-1]:1+Math.min(prev[j-1],prev[j],cur[j-1]);[prev,cur]=[cur,prev];}
-  return Math.round(prev[n]/Math.max(m,n)*100);
-}
-function llmClamp(v){v=parseInt(v,10);return isNaN(v)?null:Math.max(0,Math.min(100,v));}
-function llmColor(v,goodLow){if(v==null)return"var(--text)";const good=goodLow?v<=20:v>=90,bad=goodLow?v>=50:v<=70;return good?"var(--ok)":bad?"var(--danger)":"var(--warn)";}
-function renderLlm(orig,data){
-  const deai=llmClamp(data.de_ai_score),mean=llmClamp(data.meaning_preservation),chg=llmClamp(data.change_rate);
-  const md=document.getElementById("mDeai"),mm=document.getElementById("mMean"),mc=document.getElementById("mChange");
-  md.textContent=deai==null?"–":deai;md.style.color=llmColor(deai,true);
-  mm.textContent=mean==null?"–":mean;mm.style.color=llmColor(mean,false);
-  mc.textContent=chg==null?"–":chg+"%";mc.style.color="var(--text)";
-  const local=llmLocalChange(orig,data.rewritten||"");
-  document.getElementById("mChangeSub").textContent=local==null?"자가보고":`자가보고 · 실측 ${local}%`;
-  document.getElementById("llmNotes").textContent=data.notes?("✏️ "+data.notes):"";
-  llmOrig=orig;llmRewrite=data.rewritten||"";llmDiffOn=false;
-  document.getElementById("llmOut").textContent=llmRewrite;
-  document.getElementById("btnLlmDiff").textContent="🔀 변경 표시";
-  document.getElementById("llmEmpty").classList.add("hidden");
-  document.getElementById("llmContent").classList.remove("hidden");
-}
-function updateLlmNote(){
-  const fast=llmMode==="fast",n=fast?LLM_FAST_CATS.length:CATS.length;
-  document.getElementById("llmModeNote").innerHTML=fast
-    ?`⚡ <strong style="color:var(--text)">빠른모드</strong> — 고빈도 ${n}개 카테고리(번역투·피동·관용구·접속사·빈부사)만 적용해 빠르게 윤문합니다.`
-    :`🔍 <strong style="color:var(--text)">전체모드</strong> — 12개 전체 카테고리를 반영해 꼼꼼히 윤문합니다(느릴 수 있음).`;
-}
-document.querySelectorAll("#llmModeSeg button").forEach(b=>b.addEventListener("click",()=>{
-  document.querySelectorAll("#llmModeSeg button").forEach(x=>x.classList.remove("on"));
-  b.classList.add("on");llmMode=b.dataset.mode;updateLlmNote();
-}));
-updateLlmNote();
-document.getElementById("btnLlm").addEventListener("click",()=>showTab("Llm"));
-document.getElementById("btnRunLlm").addEventListener("click",async function(){
-  const text=document.getElementById("inputText").value.trim();
-  if(!text){showToast("입력 탭에 텍스트를 넣어주세요");showTab("Input");return;}
-  const prov=document.getElementById("llmModel").value;
-  const btn=this,old=btn.innerHTML;
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 윤문 중...';
-  try{
-    const data=await llmCall(prov,text,llmMode==="fast");
-    if(!data||!data.rewritten)throw new Error("응답 파싱 실패");
-    renderLlm(text,data);showTab("Llm");
-  }catch(e){showToast("윤문 실패: "+(e.message||e),3500);}
-  finally{btn.disabled=false;btn.innerHTML=old;}
-});
-document.getElementById("btnLlmDiff").addEventListener("click",function(){
-  if(!llmRewrite)return;
-  llmDiffOn=!llmDiffOn;
-  const out=document.getElementById("llmOut");
-  if(llmDiffOn){out.innerHTML=renderDiff(llmOrig,llmRewrite);this.textContent="📄 결과만";}
-  else{out.textContent=llmRewrite;this.textContent="🔀 변경 표시";}
-});
-document.getElementById("btnCopyLlm").addEventListener("click",function(){
-  if(!llmRewrite)return;
-  navigator.clipboard.writeText(llmRewrite).then(()=>showToast("📋 복사됨!")).catch(()=>{
-    const ta=document.createElement("textarea");ta.value=llmRewrite;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);showToast("📋 복사됨!");
-  });
-});
-// 윤문 결과를 감사 에이전트로 검증 (currentOriginal/currentFixed 재사용)
-document.getElementById("btnAuditLlm").addEventListener("click",()=>{
-  if(!llmRewrite){showToast("먼저 윤문을 실행해주세요");return;}
-  currentOriginal=llmOrig;currentFixed=llmRewrite;
-  document.getElementById("fixedEmpty").classList.add("hidden");
-  document.getElementById("fixedContent").classList.remove("hidden");
-  document.getElementById("fixedText").innerHTML=renderDiff(llmOrig,llmRewrite);
-  document.getElementById("auditPanel").classList.add("hidden");
-  showTab("Fixed");
-  document.getElementById("btnAudit").click();
-});
-// 윤문 키 저장 (설정 탭)
-(function(){
-  document.getElementById("inUpstageKey").value=localStorage.getItem(LLS.upstageKey)||"";
-  document.getElementById("inUpstageModel").value=localStorage.getItem(LLS.upstageModel)||LLM_PROVIDERS.solar.modelDefault;
-  document.getElementById("inGeminiKey").value=localStorage.getItem(LLS.geminiKey)||"";
-})();
-document.getElementById("btnSaveLlmKeys").addEventListener("click",()=>{
-  const uk=document.getElementById("inUpstageKey").value.trim();
-  const um=document.getElementById("inUpstageModel").value.trim();
-  const gk=document.getElementById("inGeminiKey").value.trim();
-  uk?localStorage.setItem(LLS.upstageKey,uk):localStorage.removeItem(LLS.upstageKey);
-  um?localStorage.setItem(LLS.upstageModel,um):localStorage.removeItem(LLS.upstageModel);
-  gk?localStorage.setItem(LLS.geminiKey,gk):localStorage.removeItem(LLS.geminiKey);
-  document.getElementById("llmKeyStatus").innerHTML='<span style="color:var(--ok)">✅ 윤문 키 저장됨</span>';
-  showToast("윤문 설정 저장됨");
-});
-llmDetect();
 
 // 키보드 단축키
 document.addEventListener("keydown",e=>{
